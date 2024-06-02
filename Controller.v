@@ -78,14 +78,24 @@ module Controller
 	wire [7:0]op;
 	wire [2:0]funct3;
 	wire funct7_5;
-	wire [4:0] rs2,rs1,rd;
+	wire [4:0] rs2;
 	
 	assign op = Instr[6:0];
 	assign funct3 = Instr[14:12];
 	assign funct7_5 = Instr[30];
-	assign rs1 = Instr[19:15];
 	assign rs2 = Instr[24:20];
-	assign rd = Instr[11:7];
+	
+	initial begin
+		ImmSrc = R_TYPE;
+		regWriteSource = 2'b00;				
+		PCSrc = 2'b00;
+		ResultSrc  = 2'b00;
+		ALUSrc = 1'b0;
+		RegWrite = 1'b1;
+		MemWrite = 2'b00;
+		shamt = 5'b0;
+		ALUControl = xADD;
+	end
 	
 	always@(*) begin
 		
@@ -135,6 +145,9 @@ module Controller
 					AND:begin					
 						ALUControl = xAND;					
 					end
+					default: begin
+						ALUControl = xADD;
+					end
 				endcase
 			end
 			//I-TYPE
@@ -166,6 +179,10 @@ module Controller
 					LHU:begin
 						ALUControl = xADDU;
 						ResultSrc  = 2'b10;
+					end
+					default: begin
+						ALUControl = xADD;
+						ResultSrc  = 2'b01;
 					end
 				endcase
 			end
@@ -208,6 +225,9 @@ module Controller
 					AND:begin					
 						ALUControl = xAND;					
 					end
+					default: begin
+						ALUControl = xADD;
+					end					
 				endcase			
 			end
 		
@@ -244,6 +264,10 @@ module Controller
 						ALUControl = xADD;
 						MemWrite = 2'b01;
 					end
+					default: begin
+						ALUControl = xADD;
+						MemWrite  = 2'b01;
+					end					
 				endcase				
 			end
 			//B_TYPE
@@ -279,6 +303,10 @@ module Controller
 					BGEU:begin
 						ALUControl = xSUBU;
 						PCSrc = (Zero >= 32'b0)? 2'b01:2'b00;
+					end
+					default:begin
+						ALUControl = xSUB;
+						PCSrc = (Zero == 32'b0)? 2'b01:2'b00;
 					end
 				endcase
 			end
@@ -320,7 +348,15 @@ module Controller
 			end
 			
 			default: begin
-			
+				ImmSrc = R_TYPE;
+				regWriteSource = 2'b00;				
+				PCSrc = 2'b00;
+				ResultSrc  = 2'b00;
+				ALUSrc = 1'b0;
+				RegWrite = 1'b1;
+				MemWrite = 2'b00;
+				shamt = rs2;
+				ALUControl = xADD;
 			end
 		endcase
 	end

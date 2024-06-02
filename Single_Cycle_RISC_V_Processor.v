@@ -45,6 +45,6 @@ SingleCycleRISCVProcessor ourDesign
 		.reset(~KEY[1]),
 		.Debug_source_select(SW[4:0]),
 		.PC(PC), 
-		.Debug_out(reg_out),		
+		.Debug_out(reg_out)	
 	);
 endmodule
