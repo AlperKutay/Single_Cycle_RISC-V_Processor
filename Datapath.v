@@ -1,30 +1,32 @@
 module Datapath
 	(
 	input clk,reset,
-	input PCSrc,ResultSrc,MemWrite,ALUSrc,RegWrite,SrcAControl,
+	input ALUSrc,RegWrite,
+	input [1:0]MemWrite,ResultSrc,PCSrc,regWriteSource,
 	input [2:0]ImmSrc,
 	input [3:0]ALUControl,
 	input [4:0]shamt,
 	input [4:0] Debug_Source_select,
 	output [31:0] Debug_out,
-	output [31:0] PC,
+	output [31:0] PC,Instr,
 	output [31:0] Zero
 	);
 
 	
 //WIRES ON DATAPATH
 wire [31:0]PCNext,PCPlus4;
-wire [31:0]Instr;
 wire [31:0]SrcA,SrcB,ImmExt;
 wire [31:0]ALUResult,WriteData,PCTarget;
-wire [31:0]ReadData, Result;
+wire [31:0]ReadData, Result, RegFileWrite;
 
 //MULTIPLEXERS
-Mux_2to1#(.WIDTH(32)) pcmux 
+Mux_4to1#(.WIDTH(32)) pcmux 
 	(
 		.select(PCSrc),
 		.input_0(PCPlus4),
 		.input_1(PCTarget),
+		.input_2(ALUResult),
+		.input_3(32'b0),		
 		.output_value(PCNext)
 	);	
 	
@@ -36,14 +38,25 @@ Mux_2to1#(.WIDTH(32)) srcbControl
 		.output_value(SrcB)
 	);	
 	
-Mux_2to1#(.WIDTH(32)) resultControl
+Mux_4to1#(.WIDTH(32)) resultControl
 	(
 		.select(ResultSrc),
 		.input_0(ALUResult),
 		.input_1(ReadData),
+		.input_2(ReadData[15:0]),
+		.input_3(ReadData[7:0]),
 		.output_value(Result)
 	);	
-	
+
+Mux_4to1#(.WIDTH(32)) regWriteControl 
+	(
+		.select(regWriteSource),
+		.input_0(Result),
+		.input_1(PCPlus4),
+		.input_2(ImmExt),
+		.input_3(PCTarget),		
+		.output_value(RegFileWrite)
+	);		
 
 //PC REGISTER
 Register_reset#(.WIDTH(32)) regPC
@@ -87,7 +100,7 @@ Register_file #(.WIDTH(32)) regFile
 		.Source_select_1(Instr[24:20]), 
 		.Debug_Source_select(Debug_Source_select), 
 		.Destination_select(Instr[11:7]), 
-		.DATA(Result),  
+		.DATA(RegFileWrite),  
 		.out_0(SrcA), 
 		.out_1(WriteData), 
 		.Debug_out(Debug_out)

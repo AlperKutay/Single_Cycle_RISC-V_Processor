@@ -20,7 +20,7 @@ always @(*) begin
 
       B_TYPE: Extended_data = {{20{DATA[24]}}, DATA[0], DATA[23:18], DATA[4:1], 1'b0};
 
-		U_TYPE: Extended_data = {DATA[24], DATA[23:13], DATA[12:5], 12'b0};
+		U_TYPE: Extended_data = {DATA[24:5], 12'b0};
 
 		J_TYPE: Extended_data = {{12{DATA[24]}}, DATA[12:5], DATA[13], DATA[23:18], DATA[17:14], 1'b0};
 		
