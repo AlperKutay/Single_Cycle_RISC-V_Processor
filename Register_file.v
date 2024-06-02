@@ -9,9 +9,11 @@ module Register_file #(parameter WIDTH=32)
 wire [WIDTH-1:0] Reg_Out [31:0];
 wire [31:0] Reg_enable;
 
+assign Reg_Out[0] = 32'b0;
+
 genvar i;
 generate
-    for (i = 0 ; i < 32 ; i = i + 1) begin : registers
+    for (i = 1 ; i < 32 ; i = i + 1) begin : registers
         Register_rsten_neg #(WIDTH) Reg (.clk(clk),.reset(reset),.we(Reg_enable[i]& write_enable),.DATA(DATA),.OUT(Reg_Out[i]));
     end
 endgenerate

@@ -2,14 +2,13 @@ module Datapath
 	(
 	input clk,reset,
 	input PCSrc,ResultSrc,MemWrite,ALUSrc,RegWrite,SrcAControl,
-	input [1:0]ImmSrc,
+	input [2:0]ImmSrc,
 	input [3:0]ALUControl,
 	input [4:0]shamt,
-	input [1:0]shiftControl,
 	input [4:0] Debug_Source_select,
 	output [31:0] Debug_out,
 	output [31:0] PC,
-	output N,Z,CO,OVF
+	output [31:0] Zero
 	);
 
 	
@@ -19,8 +18,6 @@ wire [31:0]Instr;
 wire [31:0]SrcA,SrcB,ImmExt;
 wire [31:0]ALUResult,WriteData,PCTarget;
 wire [31:0]ReadData, Result;
-wire [31:0]RD1;
-wire [31:0]shifter_output;
 
 //MULTIPLEXERS
 Mux_2to1#(.WIDTH(32)) pcmux 
@@ -29,14 +26,6 @@ Mux_2to1#(.WIDTH(32)) pcmux
 		.input_0(PCPlus4),
 		.input_1(PCTarget),
 		.output_value(PCNext)
-	);	
-
-Mux_2to1#(.WIDTH(32)) srcaControl 
-	(
-		.select(SrcAControl),
-		.input_0(RD1),
-		.input_1(shifter_output),
-		.output_value(SrcA)
 	);	
 	
 Mux_2to1#(.WIDTH(32)) srcbControl 
@@ -99,32 +88,20 @@ Register_file #(.WIDTH(32)) regFile
 		.Debug_Source_select(Debug_Source_select), 
 		.Destination_select(Instr[11:7]), 
 		.DATA(Result),  
-		.out_0(RD1), 
+		.out_0(SrcA), 
 		.out_1(WriteData), 
 		.Debug_out(Debug_out)
-	);
-
-//SHIFTER	
-shifter#(.WIDTH(32)) shft
-	(
-		.control(shiftControl),
-		.shamt(shamt),
-		.DATA(RD1),
-		.OUT(shifter_output)
 	);
 
 //ALU
 ALU#(.WIDTH(32)) alu
 	(
 		.control(ALUControl),
-		.CI(CO),
+		.shamt(shamt),
 		.DATA_A(SrcA),
 		.DATA_B(SrcB),
 		.OUT(ALUResult),
-		.CO(CO),
-		.OVF(OVF),
-		.N(N),
-		.Z(Z)
+		.Zero(Zero)
 	);
 
 //EXTENDER
