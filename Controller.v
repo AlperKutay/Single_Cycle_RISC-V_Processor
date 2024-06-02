@@ -7,13 +7,19 @@
 	J-Type: JAL operation
 */
 
+/*
+	XORID: KEMAL ID : 2375491 --> 32'h243F43
+			 ALPER ID : 2375467 --> 32'h243F2B
+			 
+			 ********** XOR(KEMAL,ALPER) = 32'h68 ************
+*/
 module Controller 
 	(
 		input clk, reset,
 		input [31:0]Instr,Zero,
 		output reg [3:0]ALUControl, 
 		output reg [2:0]ImmSrc, 
-		output reg ALUSrc,
+		output reg ALUSrc,xorid,
 		output reg RegWrite,
 		output reg [1:0] MemWrite,ResultSrc,PCSrc,regWriteSource,
 		output reg [4:0] shamt
@@ -49,7 +55,8 @@ module Controller
 					BRANCH = 7'b1100011,
 					LUI = 7'b0110111,
 					AUIPC = 7'b0010111,
-					JAL = 7'b1101111;
+					JAL = 7'b1101111,
+					XORID = 7'b0001011;
 
 	localparam 	R_TYPE = 3'b111,	//INSTRUCTION TYPES ACCORDING TO EXTENDER
 					I_TYPE = 3'b000,
@@ -86,6 +93,7 @@ module Controller
 	assign rs2 = Instr[24:20];
 	
 	initial begin
+		xorid = 1'b0;
 		ImmSrc = R_TYPE;
 		regWriteSource = 2'b00;				
 		PCSrc = 2'b00;
@@ -110,6 +118,7 @@ module Controller
 				RegWrite = 1'b1;
 				MemWrite = 2'b00;
 				shamt = rs2;
+				xorid = 1'b0;
 				case(funct3)
 					ADD_SUB:begin
 						if(funct7_5 == 1'b0) begin //ADD
@@ -159,6 +168,7 @@ module Controller
 				RegWrite = 1'b1;
 				MemWrite = 2'b00;
 				shamt = rs2;
+				xorid = 1'b0;
 				case(funct3)
 					LB:begin
 						ALUControl = xADD;
@@ -194,7 +204,8 @@ module Controller
 				ALUSrc = 1'b1;
 				RegWrite = 1'b1;
 				MemWrite = 2'b00;
-				shamt = rs2;				
+				shamt = rs2;
+				xorid = 1'b0;				
 				case(funct3)
 					ADD_SUB:begin
 						ALUControl = xADD;			
@@ -241,6 +252,20 @@ module Controller
 				MemWrite = 2'b00;
 				shamt = rs2;
 				ALUControl = xADD;
+				xorid = 1'b0;
+			end
+			
+			XORID: begin
+				ImmSrc = I_TYPE;
+				regWriteSource = 2'b00;
+				PCSrc = 2'b00;
+				ResultSrc  = 2'b00;
+				ALUSrc = 1'b1;
+				RegWrite = 1'b1;
+				MemWrite = 2'b00;
+				shamt = rs2;
+				ALUControl = xXOR;
+				xorid = 1'b1;
 			end
 			//S-TYPE
 			STORE:begin
@@ -251,6 +276,7 @@ module Controller
 				ALUSrc = 1'b1;
 				RegWrite = 1'b0;
 				shamt = rs2;
+				xorid = 1'b0;
 				case(funct3)
 					SB:begin
 						ALUControl = xADD;
@@ -278,7 +304,8 @@ module Controller
 				ALUSrc = 1'b0;
 				RegWrite = 1'b0;
 				MemWrite = 2'b00;
-				shamt = rs2;				
+				shamt = rs2;
+				xorid = 1'b0;
 				case(funct3)
 					BEQ:begin
 						ALUControl = xSUB;
@@ -320,7 +347,8 @@ module Controller
 				ALUSrc = 1'b1;
 				RegWrite = 1'b1;
 				MemWrite = 2'b00;
-				shamt = rs2;				
+				shamt = rs2;
+				xorid = 1'b0;
 			end
 			
 			AUIPC:begin
@@ -332,7 +360,8 @@ module Controller
 				ALUSrc = 1'b1;
 				RegWrite = 1'b1;
 				MemWrite = 2'b00;
-				shamt = rs2;			
+				shamt = rs2;
+				xorid = 1'b0;
 			end
 			//J_TYPE
 			JAL:begin
@@ -345,6 +374,7 @@ module Controller
 				MemWrite = 2'b00;
 				shamt = rs2;
 				ALUControl = xADD;
+				xorid = 1'b0;
 			end
 			
 			default: begin
@@ -357,6 +387,7 @@ module Controller
 				MemWrite = 2'b00;
 				shamt = rs2;
 				ALUControl = xADD;
+				xorid = 1'b0;
 			end
 		endcase
 	end

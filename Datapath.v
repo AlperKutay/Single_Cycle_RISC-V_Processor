@@ -1,7 +1,13 @@
+/*
+	XORID: KEMAL ID : 2375491 --> 32'h243F43
+			 ALPER ID : 2375467 --> 32'h243F2B
+			 
+			 ********** XOR(KEMAL,ALPER) = 32'h68 ************
+*/
 module Datapath
 	(
 	input clk,reset,
-	input ALUSrc,RegWrite,
+	input ALUSrc,RegWrite,xorid,
 	input [1:0]MemWrite,ResultSrc,PCSrc,regWriteSource,
 	input [2:0]ImmSrc,
 	input [3:0]ALUControl,
@@ -11,11 +17,10 @@ module Datapath
 	output [31:0] PC,Instr,
 	output [31:0] Zero
 	);
-
 	
 //WIRES ON DATAPATH
 wire [31:0]PCNext,PCPlus4;
-wire [31:0]SrcA,SrcB,ImmExt;
+wire [31:0]SrcA,SrcB,ImmExt, ALUInput2;
 wire [31:0]ALUResult,WriteData,PCTarget;
 wire [31:0]ReadData, Result, RegFileWrite;
 
@@ -58,6 +63,15 @@ Mux_4to1#(.WIDTH(32)) regWriteControl
 		.output_value(RegFileWrite)
 	);		
 
+Mux_2to1#(.WIDTH(32)) aluInp2Control 
+	(
+		.select(xorid),
+		.input_0(SrcB),
+		.input_1(32'h68),
+		.output_value(ALUInput2)
+	);	
+
+	
 //PC REGISTER
 Register_reset#(.WIDTH(32)) regPC
 	(
@@ -112,7 +126,7 @@ ALU#(.WIDTH(32)) alu
 		.control(ALUControl),
 		.shamt(shamt),
 		.DATA_A(SrcA),
-		.DATA_B(SrcB),
+		.DATA_B(ALUInput2),
 		.OUT(ALUResult),
 		.Zero(Zero)
 	);
