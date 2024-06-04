@@ -102,14 +102,14 @@ class Instruction:
                 logger.debug("ADDI Instruction")
             elif(self.Funct3 == "001"):
                 logger.debug("SLLI Instruction")
-                self.Imm = self.binary_instr[(31-24):(32-20)]
+                self.Imm = int(self.binary_instr[(31-24):(32-20)],2)
                 if(self.Funct7 != "0000000"):
                     logger.debug("SRLI Instruction")
                     exit()
             elif(self.Funct3 == "100"):
                 logger.debug("XORI Instruction")
             elif(self.Funct3 == "101"):
-                self.Imm = self.binary_instr[(31-24):(32-20)]
+                self.Imm = int(self.binary_instr[(31-24):(32-20)],2)
                 if(self.Funct7 == "0000000"):
                     logger.debug("SRLI Instruction")
                 elif(self.Funct7 == "0100000"):
@@ -122,7 +122,7 @@ class Instruction:
                 logger.debug("ANDI Instruction")
             logger.debug("Funct3:%s ",self.Funct3)
             logger.debug("Rs1:%d \t Rd:%d ",self.Rs1,self.Rd)
-            logger.debug("Imm:%d",self.Imm)
+            logger.debug("Imm:%s",self.Imm)
             
         elif(self.Op == "0000011"):
             logger.debug("I-Type Instruction Load and Jump")
