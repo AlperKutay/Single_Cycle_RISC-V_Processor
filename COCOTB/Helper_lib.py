@@ -44,22 +44,34 @@ class Instruction:
             self.Imm = int((self.binary_instr[(31-31):(32-25)]),2) * 32 
             self.Imm = self.Imm + int((self.binary_instr[(31-11):(32-7)]),2)
         elif(self.Op == "1100011"):
-            self.Imm12   = int(self.binary_instr[0], 2)#(31-31):(32-31)
-            self.Imm10_5 = int(self.binary_instr[(31-30):(32-25)], 2)
-            self.Imm4_1  = int(self.binary_instr[(31-11):(32-8)], 2)
-            self.Imm11    = int(self.binary_instr[24], 2)#(31-7):(32-7)
-            self.Imm = (self.Imm4_1*2)+(self.Imm10_5*(2 ** 5))+(self.Imm11*(2 ** 11))+(self.Imm12*(2 ** 12))
+            Imm12   = (int(self.binary_instr[0], 2) << 12) & 0xFFFFFFFF#(31-31):(32-31)
+            Imm10_5 = (int(self.binary_instr[(31-30):(32-25)], 2) << 5)& 0xFFFFFFFF
+            Imm4_1  = (int(self.binary_instr[(31-11):(32-8)], 2) << 1)& 0xFFFFFFFF
+            Imm11    = (int(self.binary_instr[24], 2) << 11) & 0xFFFFFFFF#(31-7):(32-7)
+            if Imm12:
+                self.Imm =  (Imm12 | Imm11 | Imm10_5 | Imm4_1) | 0xFFFFE000
+                self.Imm = self.Imm - (1 << 32)
+            else:
+                self.Imm =  (Imm12 | Imm11 | Imm10_5 | Imm4_1) & 0xFFFFFFFF
+            #1 1 00111110 0110
+            #1111111001000
+            
         elif(self.Op=="0010111"):
             self.Imm   = int(self.binary_instr[(31-31):(32-12)], 2)
         elif(self.Op=="0110111"):
             self.Imm = int(self.binary_instr[(31-31):(32-12)], 2)
-        elif(self.Op == "1100111" or self.Op == "1101111"):
-            self.Imm20   = int(self.binary_instr[0], 2)
-            self.Imm10_1 = int(self.binary_instr[(31-30):(32-21)], 2)
-            self.Imm11  = int(self.binary_instr[12], 2)
-            self.Imm19_12    = int(self.binary_instr[(31-19):(32-12)], 2)
-            self.Imm = (self.Imm20*(2 ** 20))+(self.Imm10_1*(2))+(self.Imm11*(2 ** 11))+(self.Imm19_12*(2 ** 12)) 
-            
+        elif(self.Op == "1101111"):
+            Imm20   = (int(self.binary_instr[0], 2) << 20) & 0xFFFFFFFF#(31-31):(32-31)
+            Imm10_1 = (int(self.binary_instr[(31-30):(32-21)], 2) << 1)& 0xFFFFFFFF
+            Imm19_12 = (int(self.binary_instr[(31-19):(32-12)], 2) << 12)& 0xFFFFFFFF
+            Imm11    = (int(self.binary_instr[31-20], 2) << 11) & 0xFFFFFFFF#(31-7):(32-7)
+            if Imm20:#0001 0000 0000 0000 1110
+                self.Imm =  (Imm20 | Imm10_1 | Imm19_12 | Imm11) | 0xFFE00000
+                self.Imm = self.Imm - (1 << 32)
+            else:
+                self.Imm =  (Imm20 | Imm10_1 | Imm19_12 | Imm11) & 0xFFFFFFFF
+        elif(self.Op == "1100111"):
+            self.Imm = int(self.binary_instr[(31-31):(32-20)], 2)
             
     def log(self,logger):
         logger.debug("****** Current Instruction *********")
@@ -131,7 +143,7 @@ class Instruction:
             elif(self.Funct3 == "001"):
                 logger.debug("LH Instruction")
             elif(self.Funct3 == "010"):
-                logger.debug("LH Instruction")
+                logger.debug("LW Instruction")
             elif(self.Funct3 == "100"):
                 logger.debug("LBU Instruction")
             elif(self.Funct3 == "101"):
@@ -193,7 +205,7 @@ class Instruction:
                 if self.Funct3 != "000":
                     logger.debug("Funct3 is not 000")
                     exit()
-            logger.debug("Rd:%d ",self.Rd)
+            logger.debug("Rd:%d R1:%d",self.Rd,self.Rs1)
             logger.debug("Imm:%d",self.Imm)
 
 def rotate_right(value, shift, n_bits=32):

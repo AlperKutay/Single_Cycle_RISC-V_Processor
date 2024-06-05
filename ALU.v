@@ -51,7 +51,7 @@ always@(*) begin
 			OUT = DATA_A >> shamt;
 		end
 		SRA:begin
-			OUT = DATA_A >>> shamt;
+			OUT = $signed(DATA_A) >>> shamt;
 		end
 		ADDU:begin
 			OUT = $unsigned(DATA_A) + $unsigned(DATA_B);

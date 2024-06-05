@@ -57,7 +57,7 @@ class TB:
         for i in range(32):
             self.Register_File.append(0)
         #Memory is a special class helper lib to simulate HDL counterpart    
-        self.memory = ByteAddressableMemory(1024)
+        self.memory = ByteAddressableMemory(4096)
 
         self.clock_cycle_count = 0        
           
@@ -85,6 +85,7 @@ class TB:
     def performance_model (self):
         self.logger.debug("**************** Clock cycle: %d **********************",self.clock_cycle_count)
         self.clock_cycle_count = self.clock_cycle_count+1
+        bit_length = 32
         #Read current instructions, extract and log the fields
         self.logger.debug("**************** Instruction No: %d **********************",int((self.PC)/4))
         current_instruction = self.Instruction_list[int((self.PC)/4)]
@@ -121,13 +122,14 @@ class TB:
                 #R-Type Instruction
                 R1 = self.Register_File[inst_fields.Rs1]
                 R2 = self.Register_File[inst_fields.Rs2]
+                shamt = inst_fields.Rs2
                 if (inst_fields.Funct7 == "0000000"):
                     match inst_fields.Funct3:
                         case "000":#ADD
                             datap_result = R1 + R2
                             self.Register_File[inst_fields.Rd] = datap_result
                         case "001":#SLL
-                            datap_result = shift_helper(R1,R2,0)
+                            datap_result = shift_helper(R1,shamt,0)
                             self.Register_File[inst_fields.Rd] = datap_result
                         case "010":#SLT
                             if(R1 < R2):
@@ -145,7 +147,7 @@ class TB:
                             datap_result = R1 ^ R2
                             self.Register_File[inst_fields.Rd] = datap_result
                         case "101":#SRL
-                            datap_result = shift_helper(R1,R2,1)
+                            datap_result = shift_helper(R1,shamt,1)
                             self.Register_File[inst_fields.Rd] = datap_result
                         case "110":#OR
                             datap_result = R1 | R2
@@ -163,7 +165,7 @@ class TB:
                     elif(inst_fields.Funct3 == "101"):#SRA
                         if R1 & 0x80000000:
                             R1 = R1 - 0x100000000
-                        datap_result = shift_helper(R1,R2,1)
+                        datap_result = shift_helper(R1,shamt,1)
                         self.Register_File[inst_fields.Rd] = datap_result & 0xFFFFFFFF
                 else:
                     self.logger.debug("Wrong Instruction in R-Type Instruction")
@@ -218,25 +220,25 @@ class TB:
                 IMM = inst_fields.Imm   
                 if(inst_fields.Funct3 == "000"):#LB
                     offset = R1 + IMM
-                    datap_result= self.memory.read(offset) & 0xFFFFFFFF
+                    datap_result = int.from_bytes(self.memory.read(offset), byteorder='big', signed=False) & 0xFFFFFFFF
                     if datap_result & 0x8000:
                         datap_result = datap_result - 0x10000
                     self.Register_File[inst_fields.Rd] = datap_result
                 elif(inst_fields.Funct3 == "001"):#LH
                     offset = R1 + IMM
-                    first_half_byte = self.memory.read(offset)
-                    second_half_byte = self.memory.read(offset+1)
+                    first_half_byte = int.from_bytes(self.memory.read(offset), byteorder='big', signed=False) & 0xFFFFFFFF
+                    second_half_byte = int.from_bytes(self.memory.read(offset+1), byteorder='big', signed=False) & 0xFFFFFFFF
                     datap_result = ((second_half_byte << 8) | first_half_byte) & 0xFFFFFFF
                     if datap_result & 0x8000:
                         datap_result = datap_result - 0x10000
                     self.Register_File[inst_fields.Rd] = datap_result
                 elif(inst_fields.Funct3 == "010") :#LW
                     offset = R1 + IMM
-                    first_half_byte = self.memory.read(offset)
-                    second_half_byte = self.memory.read(offset+1)
-                    third_half_byte = self.memory.read(offset+2)
-                    fourth_half_byte = self.memory.read(offset+3)
-                    self.Register_File[inst_fields.Rd] = ((fourth_half_byte << 24) | (third_half_byte << 16) | (second_half_byte << 8) | first_half_byte)
+                    first_half_byte = int.from_bytes(self.memory.read(offset), byteorder='big', signed=False) & 0xFFFFFFFF
+                    second_half_byte = int.from_bytes(self.memory.read(offset+1), byteorder='big', signed=False) & 0xFFFFFFFF
+                    third_half_byte = int.from_bytes(self.memory.read(offset+2), byteorder='big', signed=False) & 0xFFFFFFFF
+                    fourth_half_byte = int.from_bytes(self.memory.read(offset+3), byteorder='big', signed=False) & 0xFFFFFFFF
+                    datap_result = (( first_half_byte << 24) | ( second_half_byte << 16) | (third_half_byte << 8) | fourth_half_byte) & 0xFFFFFFFF
                     if datap_result & 0x8000:
                         datap_result = datap_result - 0x10000
                     self.Register_File[inst_fields.Rd] = datap_result
@@ -251,7 +253,7 @@ class TB:
                 else:
                     self.logger.debug("Wrong Instruction in I-Type Instruction Load and Jump ")
                     
-            elif(inst_fields.Op == "0000011"):#S-Type Instruction
+            elif(inst_fields.Op == "0100011"):#S-Type Instruction
                 R1 = self.Register_File[inst_fields.Rs1]
                 R2 = self.Register_File[inst_fields.Rs2]
                 IMM = inst_fields.Imm
@@ -263,64 +265,68 @@ class TB:
                     offset = R1 + IMM
                     datap_result_1 = R2 & 0xFF
                     datap_result_2 = (R2 >> 8) & 0xFF
-                    datap_result = datap_result_1 & datap_result_2
-                    self.memory.write(offset,datap_result)
+                    self.memory.write(offset,datap_result_1)
+                    self.memory.write(offset+1,datap_result_2)
                 elif(inst_fields.Funct3 == "010"):#SW
                     offset = R1 + IMM
                     datap_result_1 = R2 & 0xFF
                     datap_result_2 = (R2 >> 8) & 0xFF
                     datap_result_3 = (R2 >> 16) & 0xFF
                     datap_result_4 = (R2 >> 24) & 0xFF
-                    datap_result = datap_result_1 & datap_result_2 & datap_result_3 & datap_result_4
-                    self.memory.write(offset,datap_result)
+                    self.memory.write(offset,datap_result_1)
+                    self.memory.write(offset+1,datap_result_2)
+                    self.memory.write(offset+2,datap_result_3)
+                    self.memory.write(offset+3,datap_result_4)
                 else:
                     self.logger.debug("Wrong Instruction in S-Type Instruction ")   
 
 
             elif(inst_fields.Op == "1100011"):#B-Type Instruction
-                R1 = self.Register_File[inst_fields.Rs1]
-                R2 = self.Register_File[inst_fields.Rs2]
-                if R1 & 0x8000:
-                    R1_Unsigned = self.Register_File[inst_fields.Rs1] - 0x10000
+                R1_Unsigned = self.Register_File[inst_fields.Rs1]
+                R2_Unsigned = self.Register_File[inst_fields.Rs2]
+                if R1_Unsigned & (1 << (bit_length - 1)):
+                    R1 = R1_Unsigned - (1 << bit_length)
                 else:
-                    R1_Unsigned = R1        
+                    R1 = R1_Unsigned        
                     
-                if R2 & 0x8000:
-                    R2_Unsigned = self.Register_File[inst_fields.Rs2] - 0x10000
+                if R2_Unsigned & (1 << (bit_length - 1)):
+                    R2 = R2_Unsigned - (1 << bit_length)
                 else:
-                    R2_Unsigned = R2
+                    R2 = R2_Unsigned
 
-                IMM = inst_fields.Imm - 4 
+                IMM = inst_fields.Imm 
                 if(inst_fields.Funct3 == "000"):#BEQ
                     if(R1 == R2):
-                        self.PC = self.PC + IMM
+                        self.PC = self.PC + IMM - 4 
                         
-                elif(inst_fields.Funct3 != "001"):#BNE
-                    if(R1 == R2):
-                        self.PC = self.PC + IMM
+                elif(inst_fields.Funct3 == "001"):#BNE
+                    if(R1 != R2):
+                        self.PC = self.PC + IMM - 4 
                         
-                elif(inst_fields.Funct3 >= "101"):#BGE
-                    if(R1 == R2):
-                        self.PC = self.PC + IMM
+                elif(inst_fields.Funct3 == "101"):#BGE
+                    if(R1 >= R2):
+                        self.PC = self.PC + IMM - 4 
                         
-                elif(inst_fields.Funct3 < "100"):#BLT
-                    if(R1 == R2):
-                        self.PC = self.PC + IMM
+                elif(inst_fields.Funct3 == "100"):#BLT
+                    print(R1)
+                    print(R2)
+                    if(R1 < R2):
+                        self.PC = self.PC + IMM - 4 
                         
-                elif(inst_fields.Funct3 < "110"):#BLTU
-                    if(R1_Unsigned == R2_Unsigned):
-                        self.PC = self.PC + IMM
+                elif(inst_fields.Funct3 == "110"):#BLTU
+                    if(R1_Unsigned < R2_Unsigned):
+                        self.PC = self.PC + IMM - 4 
                         
                 elif(inst_fields.Funct3 == "111"):#BGEU
-                    if(R1_Unsigned == R2_Unsigned):
-                        self.PC = self.PC + IMM
+                    if(R1_Unsigned >= R2_Unsigned):
+                        self.PC = self.PC + IMM - 4 
                 else:
                     self.logger.debug("Wrong Instruction in B-Type Instruction ")   
                     
                     
             elif(inst_fields.Op == "0010111"):#U-Type AUIPC Instruction
                 IMM = inst_fields.Imm
-                self.Register_File[inst_fields.Rd] = self.PC + (IMM << 12)
+                self.Register_File[inst_fields.Rd] = self.PC + (IMM << 12) -4
             
             elif(inst_fields.Op == "0110111"):#U-Type LUI Instruction 
                 IMM = inst_fields.Imm
@@ -328,14 +334,14 @@ class TB:
             
             elif (inst_fields.Op == "1101111"):#J-Type JAL Instruction
                 IMM = inst_fields.Imm
-                self.Register_File[inst_fields.Rd] = self.PC + 4
-                self.PC = self.PC + (IMM)
+                self.Register_File[inst_fields.Rd] = self.PC
+                self.PC = self.PC + (IMM) - 4
                 
             elif (inst_fields.Op == "1100111"):#J-Type JALR Instruction
                 IMM = inst_fields.Imm
                 R1= self.Register_File[inst_fields.Rs1]
-                self.Register_File[inst_fields.Rd] = self.PC + 4
-                self.PC = R1 + (IMM)
+                self.Register_File[inst_fields.Rd] = self.PC
+                self.PC = R1 + (IMM) 
                 
             
                   

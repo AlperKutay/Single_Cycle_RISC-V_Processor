@@ -317,11 +317,11 @@ module Controller
 					end
 					BLT:begin
 						ALUControl = xSUB;
-						PCSrc = (Zero < 32'b0)? 2'b01:2'b00;
+						PCSrc = (($signed(Zero)) < $signed(32'b0))? 2'b01:2'b00;
 					end
 					BGE:begin
 						ALUControl = xSUB;
-						PCSrc = (Zero >= 32'b0)? 2'b01:2'b00;
+						PCSrc = (($signed(Zero)) >= $signed(32'b0))? 2'b01:2'b00;
 					end
 					BLTU:begin
 						ALUControl = xSUBU;
