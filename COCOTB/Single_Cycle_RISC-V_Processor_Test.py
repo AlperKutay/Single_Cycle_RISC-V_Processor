@@ -196,6 +196,20 @@ class TB:
                 elif(inst_fields.Funct3 == "111"):#ANDI
                     datap_result = R1 & IMM
                     self.Register_File[inst_fields.Rd] = datap_result
+                elif(inst_fields.Funct3 == "010"):#SLTI
+                    if(R1 < IMM):
+                        datap_result = 1
+                    else:
+                        datap_result = 0
+                    self.Register_File[inst_fields.Rd] = datap_result
+                elif(inst_fields.Funct3 == "011"):#SLTIU
+                    R1 = R1 & 0xFFFFFFFF
+                    IMM = IMM & 0xFFFFFFFF
+                    if(R1 < IMM):
+                        datap_result = 1
+                    else:
+                        datap_result = 0
+                    self.Register_File[inst_fields.Rd] = datap_result
                 else:
                     self.logger.debug("Wrong Instruction in I-Type Instruction")
             
