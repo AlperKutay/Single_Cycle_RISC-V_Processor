@@ -7,11 +7,10 @@
 module Datapath
 	(
 	input clk,reset,
-	input ALUSrc,RegWrite,xorid,
+	input ALUSrc,RegWrite,xorid,shift,
 	input [1:0]MemWrite,ResultSrc,PCSrc,regWriteSource,
 	input [2:0]ImmSrc,
 	input [3:0]ALUControl,
-	input [4:0]shamt,
 	input [4:0] Debug_Source_select,
 	output [31:0] Debug_out,
 	output [31:0] PC,Instr,
@@ -23,7 +22,7 @@ wire [31:0]PCNext,PCPlus4;
 wire [31:0]SrcA,SrcB,ImmExt, ALUInput2;
 wire [31:0]ALUResult,WriteData,PCTarget;
 wire [31:0]ReadData, Result, RegFileWrite;
-
+wire [4:0]shamt;
 //MULTIPLEXERS
 Mux_4to1#(.WIDTH(32)) pcmux 
 	(
@@ -71,7 +70,13 @@ Mux_2to1#(.WIDTH(32)) aluInp2Control
 		.output_value(ALUInput2)
 	);	
 
-	
+Mux_2to1#(.WIDTH(32)) shiftControl 
+	(
+		.select(shift),	//0 for R type 1 for I type
+		.input_0(WriteData[4:0]),	
+		.input_1(Instr[24:20]),
+		.output_value(shamt)
+	);	
 //PC REGISTER
 Register_reset#(.WIDTH(32)) regPC
 	(

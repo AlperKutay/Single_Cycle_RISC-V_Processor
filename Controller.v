@@ -19,10 +19,9 @@ module Controller
 		input [31:0]Instr,Zero,
 		output reg [3:0]ALUControl, 
 		output reg [2:0]ImmSrc, 
-		output reg ALUSrc,xorid,
+		output reg ALUSrc,xorid,shift,
 		output reg RegWrite,
-		output reg [1:0] MemWrite,ResultSrc,PCSrc,regWriteSource,
-		output reg [4:0] shamt
+		output reg [1:0] MemWrite,ResultSrc,PCSrc,regWriteSource
 	);
 	
 	localparam	xADD = 4'b0000,	//ALU OPERATIONS
@@ -85,12 +84,10 @@ module Controller
 	wire [7:0]op;
 	wire [2:0]funct3;
 	wire funct7_5;
-	wire [4:0] rs2;
 	
 	assign op = Instr[6:0];
 	assign funct3 = Instr[14:12];
-	assign funct7_5 = Instr[30];
-	assign rs2 = Instr[24:20];
+	assign funct7_5 = Instr[30];	
 	
 	initial begin
 		xorid = 1'b0;
@@ -101,8 +98,8 @@ module Controller
 		ALUSrc = 1'b0;
 		RegWrite = 1'b1;
 		MemWrite = 2'b00;
-		shamt = 5'b0;
 		ALUControl = xADD;
+		shift = 1'b0;
 	end
 	
 	always@(*) begin
@@ -117,7 +114,7 @@ module Controller
 				ALUSrc = 1'b0;
 				RegWrite = 1'b1;
 				MemWrite = 2'b00;
-				shamt = rs2;
+				shift = 1'b0;
 				xorid = 1'b0;
 				case(funct3)
 					ADD_SUB:begin
@@ -167,7 +164,7 @@ module Controller
 				ALUSrc = 1'b1;
 				RegWrite = 1'b1;
 				MemWrite = 2'b00;
-				shamt = rs2;
+				shift = 1'b1;
 				xorid = 1'b0;
 				case(funct3)
 					LB:begin
@@ -204,7 +201,7 @@ module Controller
 				ALUSrc = 1'b1;
 				RegWrite = 1'b1;
 				MemWrite = 2'b00;
-				shamt = rs2;
+				shift = 1'b1;
 				xorid = 1'b0;				
 				case(funct3)
 					ADD_SUB:begin
@@ -250,7 +247,7 @@ module Controller
 				ALUSrc = 1'b1;
 				RegWrite = 1'b1;
 				MemWrite = 2'b00;
-				shamt = rs2;
+				shift = 1'b1;
 				ALUControl = xADD;
 				xorid = 1'b0;
 			end
@@ -263,7 +260,7 @@ module Controller
 				ALUSrc = 1'b1;
 				RegWrite = 1'b1;
 				MemWrite = 2'b00;
-				shamt = rs2;
+				shift = 1'b1;
 				ALUControl = xXOR;
 				xorid = 1'b1;
 			end
@@ -275,7 +272,7 @@ module Controller
 				ResultSrc  = 2'b00;
 				ALUSrc = 1'b1;
 				RegWrite = 1'b0;
-				shamt = rs2;
+				shift = 1'b0;
 				xorid = 1'b0;
 				case(funct3)
 					SB:begin
@@ -304,7 +301,7 @@ module Controller
 				ALUSrc = 1'b0;
 				RegWrite = 1'b0;
 				MemWrite = 2'b00;
-				shamt = rs2;
+				shift = 1'b0;
 				xorid = 1'b0;
 				case(funct3)
 					BEQ:begin
@@ -347,7 +344,7 @@ module Controller
 				ALUSrc = 1'b1;
 				RegWrite = 1'b1;
 				MemWrite = 2'b00;
-				shamt = rs2;
+				shift = 1'b0;
 				xorid = 1'b0;
 			end
 			
@@ -360,7 +357,7 @@ module Controller
 				ALUSrc = 1'b1;
 				RegWrite = 1'b1;
 				MemWrite = 2'b00;
-				shamt = rs2;
+				shift = 1'b0;
 				xorid = 1'b0;
 			end
 			//J_TYPE
@@ -372,7 +369,7 @@ module Controller
 				ALUSrc = 1'b1;
 				RegWrite = 1'b1;
 				MemWrite = 2'b00;
-				shamt = rs2;
+				shift = 1'b0;
 				ALUControl = xADD;
 				xorid = 1'b0;
 			end
@@ -385,7 +382,7 @@ module Controller
 				ALUSrc = 1'b0;
 				RegWrite = 1'b1;
 				MemWrite = 2'b00;
-				shamt = rs2;
+				shift = 1'b0;
 				ALUControl = xADD;
 				xorid = 1'b0;
 			end

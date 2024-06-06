@@ -5,11 +5,10 @@ module SingleCycleRISCVProcessor
 		output [31:0]PC, Debug_out
 	);
 
-wire ALUSrc,RegWrite,xorid;
+wire ALUSrc,RegWrite,xorid,shift;
 wire [1:0]MemWrite,ResultSrc,PCSrc,regWriteSource;
 wire [2:0]ImmSrc;
 wire [3:0]ALUControl;
-wire [4:0]shamt;
 wire [31:0]Instr,Zero;
 	
 Datapath dp
@@ -19,13 +18,13 @@ Datapath dp
 		.ALUSrc(ALUSrc),
 		.RegWrite(RegWrite),
 		.xorid(xorid),
+		.shift(shift),
 		.MemWrite(MemWrite),
 		.ResultSrc(ResultSrc),
 		.PCSrc(PCSrc),
 		.regWriteSource(regWriteSource),
 		.ImmSrc(ImmSrc),
 		.ALUControl(ALUControl),
-		.shamt(shamt),
 		.Debug_Source_select(Debug_source_select),
 		.Debug_out(Debug_out),
 		.PC(PC),
@@ -42,12 +41,12 @@ Controller cntrl
 		.ALUControl(ALUControl), 
 		.ImmSrc(ImmSrc),
 		.xorid(xorid),
+		.shift(shift),
 		.ALUSrc(ALUSrc),
 		.RegWrite(RegWrite),
 		.MemWrite(MemWrite),
 		.ResultSrc(ResultSrc),
 		.PCSrc(PCSrc),
-		.regWriteSource(regWriteSource),
-		.shamt(shamt)	
+		.regWriteSource(regWriteSource)	
 	);
 endmodule
