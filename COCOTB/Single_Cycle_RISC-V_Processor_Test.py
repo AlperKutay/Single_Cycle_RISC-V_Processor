@@ -238,9 +238,11 @@ class TB:
                     second_half_byte = int.from_bytes(self.memory.read(offset+1), byteorder='big', signed=False) & 0xFFFFFFFF
                     third_half_byte = int.from_bytes(self.memory.read(offset+2), byteorder='big', signed=False) & 0xFFFFFFFF
                     fourth_half_byte = int.from_bytes(self.memory.read(offset+3), byteorder='big', signed=False) & 0xFFFFFFFF
-                    datap_result = (( first_half_byte << 24) | ( second_half_byte << 16) | (third_half_byte << 8) | fourth_half_byte) & 0xFFFFFFFF
-                    if datap_result & 0x8000:
-                        datap_result = datap_result - 0x10000
+                    print(bin(first_half_byte))
+                    print(bin(second_half_byte))
+                    print(bin(third_half_byte))
+                    print(bin(fourth_half_byte))
+                    datap_result = ((  fourth_half_byte << 24) | (  third_half_byte << 16) | (second_half_byte << 8) | first_half_byte) & 0xFFFFFFFF
                     self.Register_File[inst_fields.Rd] = datap_result
                 elif(inst_fields.Funct3 == "100"):#LBU
                     offset = R1 + IMM
