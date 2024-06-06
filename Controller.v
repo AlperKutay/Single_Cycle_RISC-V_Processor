@@ -103,290 +103,303 @@ module Controller
 	end
 	
 	always@(*) begin
-		
-		case(op)
-			//R-TYPE
-			ALU_SHIFT: begin
-				ImmSrc = R_TYPE;
-				regWriteSource = 2'b00;				
-				PCSrc = 2'b00;
-				ResultSrc  = 2'b00;
-				ALUSrc = 1'b0;
-				RegWrite = 1'b1;
-				MemWrite = 2'b00;
-				shift = 1'b0;
-				xorid = 1'b0;
-				case(funct3)
-					ADD_SUB:begin
-						if(funct7_5 == 1'b0) begin //ADD
+		if(reset) begin
+			case(op)
+				//R-TYPE
+				ALU_SHIFT: begin
+					ImmSrc = R_TYPE;
+					regWriteSource = 2'b00;				
+					PCSrc = 2'b00;
+					ResultSrc  = 2'b00;
+					ALUSrc = 1'b0;
+					RegWrite = 1'b1;
+					MemWrite = 2'b00;
+					shift = 1'b0;
+					xorid = 1'b0;
+					case(funct3)
+						ADD_SUB:begin
+							if(funct7_5 == 1'b0) begin //ADD
+								ALUControl = xADD;
+							end
+							else begin						//SUB
+								ALUControl = xSUB;					
+							end
+						end
+						SLL:begin						
+							ALUControl = xSLL;						
+						end
+						SLT:begin
+							ALUControl = xSLT;					
+						end
+						SLTU:begin
+							ALUControl = xSLTU;					
+						end
+						XOR:begin
+							ALUControl = xXOR;				
+						end
+						SRL_SRA:begin						
+							if(funct7_5 == 1'b0) begin //SRL
+								ALUControl = xSRL;							
+							end
+							else begin						//SRA
+								ALUControl = xSRA;							
+							end
+						end
+						ORR:begin				
+							ALUControl = xORR;				
+						end
+						AND:begin					
+							ALUControl = xAND;					
+						end
+						default: begin
 							ALUControl = xADD;
 						end
-						else begin						//SUB
-							ALUControl = xSUB;					
+					endcase
+				end
+				//I-TYPE
+				LOAD: begin
+					ImmSrc = I_TYPE;
+					regWriteSource = 2'b00;
+					PCSrc = 2'b00;
+					ALUSrc = 1'b1;
+					RegWrite = 1'b1;
+					MemWrite = 2'b00;
+					shift = 1'b1;
+					xorid = 1'b0;
+					case(funct3)
+						LB:begin
+							ALUControl = xADD;
+							ResultSrc  = 2'b11;
 						end
-					end
-					SLL:begin						
-						ALUControl = xSLL;						
-					end
-					SLT:begin
-						ALUControl = xSLT;					
-					end
-					SLTU:begin
-						ALUControl = xSLTU;					
-					end
-					XOR:begin
-						ALUControl = xXOR;				
-					end
-					SRL_SRA:begin						
-						if(funct7_5 == 1'b0) begin //SRL
-							ALUControl = xSRL;							
+						LH:begin
+							ALUControl = xADD;
+							ResultSrc  = 2'b10;
 						end
-						else begin						//SRA
-							ALUControl = xSRA;							
+						LW:begin
+							ALUControl = xADD;
+							ResultSrc  = 2'b01;
 						end
-					end
-					ORR:begin				
-						ALUControl = xORR;				
-					end
-					AND:begin					
-						ALUControl = xAND;					
-					end
-					default: begin
-						ALUControl = xADD;
-					end
-				endcase
-			end
-			//I-TYPE
-			LOAD: begin
-				ImmSrc = I_TYPE;
-				regWriteSource = 2'b00;
-				PCSrc = 2'b00;
-				ALUSrc = 1'b1;
-				RegWrite = 1'b1;
-				MemWrite = 2'b00;
-				shift = 1'b1;
-				xorid = 1'b0;
-				case(funct3)
-					LB:begin
-						ALUControl = xADD;
-						ResultSrc  = 2'b11;
-					end
-					LH:begin
-						ALUControl = xADD;
-						ResultSrc  = 2'b10;
-					end
-					LW:begin
-						ALUControl = xADD;
-						ResultSrc  = 2'b01;
-					end
-					LBU:begin
-						ALUControl = xADDU;
-						ResultSrc  = 2'b11;
-					end
-					LHU:begin
-						ALUControl = xADDU;
-						ResultSrc  = 2'b10;
-					end
-					default: begin
-						ALUControl = xADD;
-						ResultSrc  = 2'b01;
-					end
-				endcase
-			end
-			ALUI_SHIFTI: begin
-				ImmSrc = I_TYPE;
-				regWriteSource = 2'b00;
-				PCSrc = 2'b00;
-				ResultSrc  = 2'b00;
-				ALUSrc = 1'b1;
-				RegWrite = 1'b1;
-				MemWrite = 2'b00;
-				shift = 1'b1;
-				xorid = 1'b0;				
-				case(funct3)
-					ADD_SUB:begin
-						ALUControl = xADD;			
-					end
-					SLL:begin						
-						ALUControl = xSLL;						
-					end
-					SLT:begin
-						ALUControl = xSLT;					
-					end
-					SLTU:begin
-						ALUControl = xSLTU;					
-					end
-					XOR:begin
-						ALUControl = xXOR;				
-					end
-					SRL_SRA:begin						
-						if(funct7_5 == 1'b0) begin //SRL
-							ALUControl = xSRL;							
+						LBU:begin
+							ALUControl = xADDU;
+							ResultSrc  = 2'b11;
 						end
-						else begin						//SRA
-							ALUControl = xSRA;							
+						LHU:begin
+							ALUControl = xADDU;
+							ResultSrc  = 2'b10;
 						end
-					end
-					ORR:begin				
-						ALUControl = xORR;				
-					end
-					AND:begin					
-						ALUControl = xAND;					
-					end
-					default: begin
-						ALUControl = xADD;
-					end					
-				endcase			
-			end
-		
-			JALR: begin
-				ImmSrc = I_TYPE;
-				regWriteSource = 2'b01;				
-				PCSrc = 2'b10;
-				ResultSrc  = 2'b00;
-				ALUSrc = 1'b1;
-				RegWrite = 1'b1;
-				MemWrite = 2'b00;
-				shift = 1'b1;
-				ALUControl = xADD;
-				xorid = 1'b0;
-			end
+						default: begin
+							ALUControl = xADD;
+							ResultSrc  = 2'b01;
+						end
+					endcase
+				end
+				ALUI_SHIFTI: begin
+					ImmSrc = I_TYPE;
+					regWriteSource = 2'b00;
+					PCSrc = 2'b00;
+					ResultSrc  = 2'b00;
+					ALUSrc = 1'b1;
+					RegWrite = 1'b1;
+					MemWrite = 2'b00;
+					shift = 1'b1;
+					xorid = 1'b0;				
+					case(funct3)
+						ADD_SUB:begin
+							ALUControl = xADD;			
+						end
+						SLL:begin						
+							ALUControl = xSLL;						
+						end
+						SLT:begin
+							ALUControl = xSLT;					
+						end
+						SLTU:begin
+							ALUControl = xSLTU;					
+						end
+						XOR:begin
+							ALUControl = xXOR;				
+						end
+						SRL_SRA:begin						
+							if(funct7_5 == 1'b0) begin //SRL
+								ALUControl = xSRL;							
+							end
+							else begin						//SRA
+								ALUControl = xSRA;							
+							end
+						end
+						ORR:begin				
+							ALUControl = xORR;				
+						end
+						AND:begin					
+							ALUControl = xAND;					
+						end
+						default: begin
+							ALUControl = xADD;
+						end					
+					endcase			
+				end
 			
-			XORID: begin
-				ImmSrc = I_TYPE;
-				regWriteSource = 2'b00;
-				PCSrc = 2'b00;
-				ResultSrc  = 2'b00;
-				ALUSrc = 1'b1;
-				RegWrite = 1'b1;
-				MemWrite = 2'b00;
-				shift = 1'b1;
-				ALUControl = xXOR;
-				xorid = 1'b1;
-			end
-			//S-TYPE
-			STORE:begin
-				ImmSrc = S_TYPE;
-				regWriteSource = 2'b00;
-				PCSrc = 2'b00;
-				ResultSrc  = 2'b00;
-				ALUSrc = 1'b1;
-				RegWrite = 1'b0;
-				shift = 1'b0;
-				xorid = 1'b0;
-				case(funct3)
-					SB:begin
-						ALUControl = xADD;
-						MemWrite = 2'b11;
-					end
-					SH:begin
-						ALUControl = xADD;
-						MemWrite = 2'b10;
-					end
-					SW:begin
-						ALUControl = xADD;
-						MemWrite = 2'b01;
-					end
-					default: begin
-						ALUControl = xADD;
-						MemWrite  = 2'b01;
-					end					
-				endcase				
-			end
-			//B_TYPE
-			BRANCH:begin
-				ImmSrc = B_TYPE;
-				regWriteSource = 2'b00;
-				ResultSrc  = 2'b00;
-				ALUSrc = 1'b0;
-				RegWrite = 1'b0;
-				MemWrite = 2'b00;
-				shift = 1'b0;
-				xorid = 1'b0;
-				case(funct3)
-					BEQ:begin
-						ALUControl = xSUB;
-						PCSrc = (Zero == 32'b0)? 2'b01:2'b00;
-					end
-					BNE:begin
-						ALUControl = xSUB;
-						PCSrc = (Zero != 32'b0)? 2'b01:2'b00;				
-					end
-					BLT:begin
-						ALUControl = xSUB;
-						PCSrc = (($signed(Zero)) < $signed(32'b0))? 2'b01:2'b00;
-					end
-					BGE:begin
-						ALUControl = xSUB;
-						PCSrc = (($signed(Zero)) >= $signed(32'b0))? 2'b01:2'b00;
-					end
-					BLTU:begin
-						ALUControl = xSUBU;
-						PCSrc = (Zero < 32'b0)? 2'b01:2'b00;
-					end
-					BGEU:begin
-						ALUControl = xSUBU;
-						PCSrc = (Zero >= 32'b0)? 2'b01:2'b00;
-					end
-					default:begin
-						ALUControl = xSUB;
-						PCSrc = (Zero == 32'b0)? 2'b01:2'b00;
-					end
-				endcase
-			end
-			//U_TYPE
-			LUI:begin
-				ImmSrc = U_TYPE;
-				regWriteSource = 2'b10;
-				PCSrc = 2'b00;
-				ALUControl = xADD;
-				ResultSrc  = 2'b00;
-				ALUSrc = 1'b1;
-				RegWrite = 1'b1;
-				MemWrite = 2'b00;
-				shift = 1'b0;
-				xorid = 1'b0;
-			end
-			
-			AUIPC:begin
-				ImmSrc = U_TYPE;
-				regWriteSource = 2'b11;
-				PCSrc = 2'b00;
-				ALUControl = xADD;
-				ResultSrc  = 2'b00;
-				ALUSrc = 1'b1;
-				RegWrite = 1'b1;
-				MemWrite = 2'b00;
-				shift = 1'b0;
-				xorid = 1'b0;
-			end
-			//J_TYPE
-			JAL:begin
-				ImmSrc = J_TYPE;
-				regWriteSource = 2'b01;				
-				PCSrc = 2'b01;
-				ResultSrc  = 2'b00;
-				ALUSrc = 1'b1;
-				RegWrite = 1'b1;
-				MemWrite = 2'b00;
-				shift = 1'b0;
-				ALUControl = xADD;
-				xorid = 1'b0;
-			end
-			
-			default: begin
-				ImmSrc = R_TYPE;
-				regWriteSource = 2'b00;				
-				PCSrc = 2'b00;
-				ResultSrc  = 2'b00;
-				ALUSrc = 1'b0;
-				RegWrite = 1'b1;
-				MemWrite = 2'b00;
-				shift = 1'b0;
-				ALUControl = xADD;
-				xorid = 1'b0;
-			end
-		endcase
+				JALR: begin
+					ImmSrc = I_TYPE;
+					regWriteSource = 2'b01;				
+					PCSrc = 2'b10;
+					ResultSrc  = 2'b00;
+					ALUSrc = 1'b1;
+					RegWrite = 1'b1;
+					MemWrite = 2'b00;
+					shift = 1'b1;
+					ALUControl = xADD;
+					xorid = 1'b0;
+				end
+				
+				XORID: begin
+					ImmSrc = I_TYPE;
+					regWriteSource = 2'b00;
+					PCSrc = 2'b00;
+					ResultSrc  = 2'b00;
+					ALUSrc = 1'b1;
+					RegWrite = 1'b1;
+					MemWrite = 2'b00;
+					shift = 1'b1;
+					ALUControl = xXOR;
+					xorid = 1'b1;
+				end
+				//S-TYPE
+				STORE:begin
+					ImmSrc = S_TYPE;
+					regWriteSource = 2'b00;
+					PCSrc = 2'b00;
+					ResultSrc  = 2'b00;
+					ALUSrc = 1'b1;
+					RegWrite = 1'b0;
+					shift = 1'b0;
+					xorid = 1'b0;
+					case(funct3)
+						SB:begin
+							ALUControl = xADD;
+							MemWrite = 2'b11;
+						end
+						SH:begin
+							ALUControl = xADD;
+							MemWrite = 2'b10;
+						end
+						SW:begin
+							ALUControl = xADD;
+							MemWrite = 2'b01;
+						end
+						default: begin
+							ALUControl = xADD;
+							MemWrite  = 2'b01;
+						end					
+					endcase				
+				end
+				//B_TYPE
+				BRANCH:begin
+					ImmSrc = B_TYPE;
+					regWriteSource = 2'b00;
+					ResultSrc  = 2'b00;
+					ALUSrc = 1'b0;
+					RegWrite = 1'b0;
+					MemWrite = 2'b00;
+					shift = 1'b0;
+					xorid = 1'b0;
+					case(funct3)
+						BEQ:begin
+							ALUControl = xSUB;
+							PCSrc = (Zero == 32'b0)? 2'b01:2'b00;
+						end
+						BNE:begin
+							ALUControl = xSUB;
+							PCSrc = (Zero != 32'b0)? 2'b01:2'b00;				
+						end
+						BLT:begin
+							ALUControl = xSUB;
+							PCSrc = (($signed(Zero)) < $signed(32'b0))? 2'b01:2'b00;
+						end
+						BGE:begin
+							ALUControl = xSUB;
+							PCSrc = (($signed(Zero)) >= $signed(32'b0))? 2'b01:2'b00;
+						end
+						BLTU:begin
+							ALUControl = xSUBU;
+							PCSrc = (Zero < 32'b0)? 2'b01:2'b00;
+						end
+						BGEU:begin
+							ALUControl = xSUBU;
+							PCSrc = (Zero >= 32'b0)? 2'b01:2'b00;
+						end
+						default:begin
+							ALUControl = xSUB;
+							PCSrc = (Zero == 32'b0)? 2'b01:2'b00;
+						end
+					endcase
+				end
+				//U_TYPE
+				LUI:begin
+					ImmSrc = U_TYPE;
+					regWriteSource = 2'b10;
+					PCSrc = 2'b00;
+					ALUControl = xADD;
+					ResultSrc  = 2'b00;
+					ALUSrc = 1'b1;
+					RegWrite = 1'b1;
+					MemWrite = 2'b00;
+					shift = 1'b0;
+					xorid = 1'b0;
+				end
+				
+				AUIPC:begin
+					ImmSrc = U_TYPE;
+					regWriteSource = 2'b11;
+					PCSrc = 2'b00;
+					ALUControl = xADD;
+					ResultSrc  = 2'b00;
+					ALUSrc = 1'b1;
+					RegWrite = 1'b1;
+					MemWrite = 2'b00;
+					shift = 1'b0;
+					xorid = 1'b0;
+				end
+				//J_TYPE
+				JAL:begin
+					ImmSrc = J_TYPE;
+					regWriteSource = 2'b01;				
+					PCSrc = 2'b01;
+					ResultSrc  = 2'b00;
+					ALUSrc = 1'b1;
+					RegWrite = 1'b1;
+					MemWrite = 2'b00;
+					shift = 1'b0;
+					ALUControl = xADD;
+					xorid = 1'b0;
+				end
+				
+				default: begin
+					ImmSrc = R_TYPE;
+					regWriteSource = 2'b00;				
+					PCSrc = 2'b00;
+					ResultSrc  = 2'b00;
+					ALUSrc = 1'b0;
+					RegWrite = 1'b1;
+					MemWrite = 2'b00;
+					shift = 1'b0;
+					ALUControl = xADD;
+					xorid = 1'b0;
+				end
+			endcase
+		end
+		else begin
+			ImmSrc = R_TYPE;
+			regWriteSource = 2'b00;				
+			PCSrc = 2'b00;
+			ResultSrc  = 2'b00;
+			ALUSrc = 1'b0;
+			RegWrite = 1'b1;
+			MemWrite = 2'b00;
+			shift = 1'b0;
+			ALUControl = xADD;
+			xorid = 1'b0;
+		end
 	end
 	
 endmodule
