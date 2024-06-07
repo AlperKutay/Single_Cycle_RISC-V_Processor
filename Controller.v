@@ -103,7 +103,7 @@ module Controller
 	end
 	
 	always@(*) begin
-		if(reset) begin
+		if(!reset) begin
 			case(op)
 				//R-TYPE
 				ALU_SHIFT: begin
