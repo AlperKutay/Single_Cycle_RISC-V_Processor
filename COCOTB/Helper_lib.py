@@ -55,7 +55,6 @@ class Instruction:
                 self.Imm =  (Imm12 | Imm11 | Imm10_5 | Imm4_1) & 0xFFFFFFFF
             #1 1 00111110 0110
             #1111111001000
-            
         elif(self.Op=="0010111"):
             self.Imm   = int(self.binary_instr[(31-31):(32-12)], 2)
         elif(self.Op=="0110111"):
@@ -207,6 +206,11 @@ class Instruction:
                     exit()
             logger.debug("Rd:%d R1:%d",self.Rd,self.Rs1)
             logger.debug("Imm:%d",self.Imm)
+        
+        elif(self.Op == "0001011"):
+            logger.debug("I-Type Instruction")
+            logger.debug("XORID Instruction")
+            logger.debug("Rd:%d R1:%d",self.Rd,self.Rs1)
 
 def rotate_right(value, shift, n_bits=32):
     """

@@ -71,14 +71,20 @@ class TB:
         self.logger.debug("************* Performance Model / DUT Data  **************")
         self.logger.debug("PC:%d \t PC:%d",self.PC,self.dut_PC.value.integer)
         for i in range(32):
-            if(self.Register_File[i] < 0):
-                self.logger.debug("Register%d: %d \t %d",i,self.Register_File[i]+(2**32), self.dut_regfile.Reg_Out[i].value.integer)
+            max_signed_32bit = 0x7FFFFFFF
+            if(self.Register_File[i] > max_signed_32bit):
+                performance_model = self.Register_File[i] - 0x100000000
             else:
-                self.logger.debug("Register%d: %d \t %d",i,self.Register_File[i], self.dut_regfile.Reg_Out[i].value.integer)
+                performance_model = self.Register_File[i]
+            if(self.dut_regfile.Reg_Out[i].value.integer > max_signed_32bit):
+                dut_model = self.dut_regfile.Reg_Out[i].value.integer - 0x100000000
+            else:
+                dut_model = self.dut_regfile.Reg_Out[i].value.integer
+            self.logger.debug("Register%d: %d \t %d",i,performance_model,dut_model )
         #self.logger.debug("Register%d: %d \t %d",15,self.Register_File[15], self.dut_regfile.Reg_15.value.integer)
         assert self.PC == self.dut_PC.value
         for i in range(32):
-           assert self.Register_File[i] == self.dut_regfile.Reg_Out[i].value
+           assert performance_model == dut_model
         #assert self.Register_File[15] == self.dut_regfile.Reg_15.value
         
     #A model of the verilog code to confirm operation, data is In_data
@@ -122,7 +128,7 @@ class TB:
                 #R-Type Instruction
                 R1 = self.Register_File[inst_fields.Rs1]
                 R2 = self.Register_File[inst_fields.Rs2]
-                shamt = inst_fields.Rs2
+                shamt = R2
                 if (inst_fields.Funct7 == "0000000"):
                     match inst_fields.Funct3:
                         case "000":#ADD
@@ -238,10 +244,6 @@ class TB:
                     second_half_byte = int.from_bytes(self.memory.read(offset+1), byteorder='big', signed=False) & 0xFFFFFFFF
                     third_half_byte = int.from_bytes(self.memory.read(offset+2), byteorder='big', signed=False) & 0xFFFFFFFF
                     fourth_half_byte = int.from_bytes(self.memory.read(offset+3), byteorder='big', signed=False) & 0xFFFFFFFF
-                    print(bin(first_half_byte))
-                    print(bin(second_half_byte))
-                    print(bin(third_half_byte))
-                    print(bin(fourth_half_byte))
                     datap_result = ((  fourth_half_byte << 24) | (  third_half_byte << 16) | (second_half_byte << 8) | first_half_byte) & 0xFFFFFFFF
                     self.Register_File[inst_fields.Rd] = datap_result
                 elif(inst_fields.Funct3 == "100"):#LBU
@@ -345,9 +347,12 @@ class TB:
                 self.Register_File[inst_fields.Rd] = self.PC
                 self.PC = R1 + (IMM) 
                 
-            
-                  
-                
+            elif(inst_fields.Op == "0001011"):
+                R1= self.Register_File[inst_fields.Rs1]
+                student_id_alper = 2375467
+                student_id_kemal = 2375491
+                xorid = student_id_alper ^ student_id_kemal
+                self.Register_File[inst_fields.Rd] = xorid ^ R1
         else:
             self.logger.debug("Current Instruction is not executed")
 
