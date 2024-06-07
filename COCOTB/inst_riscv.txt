@@ -18,7 +18,7 @@
 68	slt	x23, x9, x4		x23 = 0
 72	sltu	x24, x3, x10		x24 = 1
 76	xor	x25, x2, x3		x25 = 200
-80	srl	x7, x4, x24		x7 = 28
+80	srl	x7, x4, x24		x7 = 5
 84	sra	x24, x21, x5		x24 = -10
 88	or 	x26, x20, x25		x26 = 218
 92	and	x27, x20, x21		x27 = 0
