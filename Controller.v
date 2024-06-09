@@ -323,7 +323,7 @@ module Controller
 						end
 						BLTU:begin
 							ALUControl = xSUBU;
-							PCSrc = (Zero == 2'b11)? 2'b01:2'b00;
+							PCSrc = (Zero != 2'b11)? 2'b01:2'b00;
 						end
 						BGEU:begin
 							ALUControl = xSUBU;

@@ -69,22 +69,14 @@ class TB:
     #Compares and lgos the PC and register file of Python module and HDL design
     def compare_result(self):
         self.logger.debug("************* Performance Model / DUT Data  **************")
-        self.logger.debug("PC:%d \t PC:%d",self.PC,self.dut_PC.value.integer)
+        self.logger.debug("PC:%08x \t PC:%08x",self.PC,self.dut_PC.value.integer)
+        self.Register_File[0] = 0
         for i in range(32):
-            max_signed_32bit = 0x7FFFFFFF
-            if(self.Register_File[i] > max_signed_32bit):
-                performance_model = self.Register_File[i] - 0x100000000
-            else:
-                performance_model = self.Register_File[i]
-            if(self.dut_regfile.Reg_Out[i].value.integer > max_signed_32bit):
-                dut_model = self.dut_regfile.Reg_Out[i].value.integer - 0x100000000
-            else:
-                dut_model = self.dut_regfile.Reg_Out[i].value.integer
-            self.logger.debug("Register%d: %d \t %d",i,performance_model,dut_model )
+            self.logger.debug("Register%d: %08x \t\t %08x",i,self.Register_File[i],self.dut_regfile.Reg_Out[i].value.integer )
+            assert self.Register_File[i] == self.dut_regfile.Reg_Out[i].value.integer
         #self.logger.debug("Register%d: %d \t %d",15,self.Register_File[15], self.dut_regfile.Reg_15.value.integer)
         assert self.PC == self.dut_PC.value
-        for i in range(32):
-           assert performance_model == dut_model
+         
         #assert self.Register_File[15] == self.dut_regfile.Reg_15.value
         
     #A model of the verilog code to confirm operation, data is In_data
@@ -132,7 +124,7 @@ class TB:
                 if (inst_fields.Funct7 == "0000000"):
                     match inst_fields.Funct3:
                         case "000":#ADD
-                            datap_result = R1 + R2
+                            datap_result = (R1 + R2) & 0xFFFFFFFF
                             self.Register_File[inst_fields.Rd] = datap_result
                         case "001":#SLL
                             datap_result = shift_helper(R1,shamt,0)
@@ -180,6 +172,8 @@ class TB:
                 #I-Type Instruction
                 R1 = self.Register_File[inst_fields.Rs1]
                 IMM = inst_fields.Imm
+                if(IMM & 0x800):
+                    IMM = IMM | 0xFFFFF000
                 if(inst_fields.Funct3 == "000"):#ADDI
                     datap_result = R1 + IMM
                     self.Register_File[inst_fields.Rd] = datap_result
@@ -205,6 +199,8 @@ class TB:
                     datap_result = R1 & IMM
                     self.Register_File[inst_fields.Rd] = datap_result
                 elif(inst_fields.Funct3 == "010"):#SLTI
+                    if R1 & 0x80000000:
+                        R1 = R1 - 0x100000000
                     if(R1 < IMM):
                         datap_result = 1
                     else:
@@ -226,34 +222,36 @@ class TB:
                 IMM = inst_fields.Imm   
                 if(inst_fields.Funct3 == "000"):#LB
                     offset = R1 + IMM
-                    datap_result = int.from_bytes(self.memory.read(offset), byteorder='big', signed=False) & 0xFFFFFFFF
-                    if datap_result & 0x8000:
-                        datap_result = datap_result - 0x10000
+                    datap_result = int.from_bytes(self.memory.read(offset), byteorder='big', signed=False) & 0xFF
                     self.Register_File[inst_fields.Rd] = datap_result
                 elif(inst_fields.Funct3 == "001"):#LH
                     offset = R1 + IMM
-                    first_half_byte = int.from_bytes(self.memory.read(offset), byteorder='big', signed=False) & 0xFFFFFFFF
-                    second_half_byte = int.from_bytes(self.memory.read(offset+1), byteorder='big', signed=False) & 0xFFFFFFFF
-                    datap_result = ((second_half_byte << 8) | first_half_byte) & 0xFFFFFFF
-                    if datap_result & 0x8000:
-                        datap_result = datap_result - 0x10000
+                    first_half_byte = int.from_bytes(self.memory.read(offset), byteorder='big', signed=False) & 0xFF
+                    second_half_byte = int.from_bytes(self.memory.read(offset+1), byteorder='big', signed=False) & 0xFF
+                    datap_result = ((second_half_byte << 8) | first_half_byte) & 0xFFFFFFFF
                     self.Register_File[inst_fields.Rd] = datap_result
                 elif(inst_fields.Funct3 == "010") :#LW
                     offset = R1 + IMM
-                    first_half_byte = int.from_bytes(self.memory.read(offset), byteorder='big', signed=False) & 0xFFFFFFFF
-                    second_half_byte = int.from_bytes(self.memory.read(offset+1), byteorder='big', signed=False) & 0xFFFFFFFF
-                    third_half_byte = int.from_bytes(self.memory.read(offset+2), byteorder='big', signed=False) & 0xFFFFFFFF
-                    fourth_half_byte = int.from_bytes(self.memory.read(offset+3), byteorder='big', signed=False) & 0xFFFFFFFF
+                    first_half_byte = int.from_bytes(self.memory.read(offset), byteorder='big', signed=False) & 0xFF
+                    second_half_byte = int.from_bytes(self.memory.read(offset+1), byteorder='big', signed=False) & 0xFF
+                    third_half_byte = int.from_bytes(self.memory.read(offset+2), byteorder='big', signed=False) & 0xFF
+                    fourth_half_byte = int.from_bytes(self.memory.read(offset+3), byteorder='big', signed=False) & 0xFF
                     datap_result = ((  fourth_half_byte << 24) | (  third_half_byte << 16) | (second_half_byte << 8) | first_half_byte) & 0xFFFFFFFF
                     self.Register_File[inst_fields.Rd] = datap_result
                 elif(inst_fields.Funct3 == "100"):#LBU
+                    R1 = R1 & 0xFFFFFFFF
+                    IMM = IMM & 0xFFFFFFFF
                     offset = R1 + IMM
-                    self.Register_File[inst_fields.Rd]= self.memory.read(offset) & 0xFF
+                    self.Register_File[inst_fields.Rd]= int.from_bytes(self.memory.read(offset), byteorder='big', signed=False) & 0xFF
                 elif(inst_fields.Funct3 == "101"):#LHU
+                    R1 = R1 & 0xFFFFFFFF
+                    IMM = IMM & 0xFFFFFFFF
                     offset = R1 + IMM
-                    first_half_byte = self.memory.read(offset)
-                    second_half_byte = self.memory.read(offset+1)
-                    datap_result = ((second_half_byte << 8) | first_half_byte) & 0xFF
+                    first_half_byte = int.from_bytes(self.memory.read(offset), byteorder='big', signed=False) & 0xFF
+                    print(first_half_byte)
+                    second_half_byte = int.from_bytes(self.memory.read(offset+1), byteorder='big', signed=False) & 0xFF
+                    datap_result = ((second_half_byte << 8) | first_half_byte) & 0xFFFFFFFF
+                    self.Register_File[inst_fields.Rd] = datap_result
                 else:
                     self.logger.debug("Wrong Instruction in I-Type Instruction Load and Jump ")
                     
@@ -312,8 +310,6 @@ class TB:
                         self.PC = self.PC + IMM - 4 
                         
                 elif(inst_fields.Funct3 == "100"):#BLT
-                    print(R1)
-                    print(R2)
                     if(R1 < R2):
                         self.PC = self.PC + IMM - 4 
                         
@@ -374,6 +370,7 @@ class TB:
                 await RisingEdge(self.dut.clk)
                 await FallingEdge(self.dut.clk)
                 self.compare_result()
+                input()
         except IndexError:
             print("Code is done.")       
                    
