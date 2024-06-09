@@ -6,10 +6,10 @@ module SingleCycleRISCVProcessor
 	);
 
 wire ALUSrc,RegWrite,xorid,shift;
-wire [1:0]MemWrite,ResultSrc,PCSrc,regWriteSource;
+wire [1:0]MemWrite,ResultSrc,PCSrc,regWriteSource,Zero;
 wire [2:0]ImmSrc;
 wire [3:0]ALUControl;
-wire [31:0]Instr,Zero;
+wire [31:0]Instr;
 	
 Datapath dp
 	(

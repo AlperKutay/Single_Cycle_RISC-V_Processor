@@ -16,7 +16,8 @@
 module Controller 
 	(
 		input clk, reset,
-		input [31:0]Instr,Zero,
+		input [1:0]Zero,
+		input [31:0]Instr,
 		output reg [3:0]ALUControl, 
 		output reg [2:0]ImmSrc, 
 		output reg ALUSrc,xorid,shift,
@@ -306,27 +307,27 @@ module Controller
 					case(funct3)
 						BEQ:begin
 							ALUControl = xSUB;
-							PCSrc = (Zero == 32'b0)? 2'b01:2'b00;
+							PCSrc = (Zero == 2'b00)? 2'b01:2'b00;
 						end
 						BNE:begin
 							ALUControl = xSUB;
-							PCSrc = (Zero != 32'b0)? 2'b01:2'b00;				
+							PCSrc = (Zero != 2'b00)? 2'b01:2'b00;				
 						end
 						BLT:begin
 							ALUControl = xSUB;
-							PCSrc = (($signed(Zero)) < $signed(32'b0))? 2'b01:2'b00;
+							PCSrc = ( Zero == 2'b11)? 2'b01:2'b00;
 						end
 						BGE:begin
 							ALUControl = xSUB;
-							PCSrc = (($signed(Zero)) >= $signed(32'b0))? 2'b01:2'b00;
+							PCSrc = (Zero == 2'b01 || Zero == 2'b00)? 2'b01:2'b00;
 						end
 						BLTU:begin
 							ALUControl = xSUBU;
-							PCSrc = (Zero < 32'b0)? 2'b01:2'b00;
+							PCSrc = (Zero == 2'b11)? 2'b01:2'b00;
 						end
 						BGEU:begin
 							ALUControl = xSUBU;
-							PCSrc = (Zero >= 32'b0)? 2'b01:2'b00;
+							PCSrc = (Zero == 2'b01 || Zero == 2'b00)? 2'b01:2'b00;
 						end
 						default:begin
 							ALUControl = xSUB;

@@ -24,7 +24,7 @@
 92	and	x27, x20, x21		x27 = 0
 96	bge	x5, x8, 8		NOT TAKEN
 100	blt	x21, x25, -52		TAKEN (PC = 48)
-104	lui	x10, 31			x10 = 7936
+104	lui	x10, 31			x10 = 126976
 108	sb	x21, 38(x4)		-21 to location 94
 112	sh 	x7, 0(x26)		28 to location 218
 116	sw	x24, 19(x20)		-10 to location 37
@@ -33,6 +33,6 @@
 128	lb 	x31, 38(x4)		x31 = -21
 132	lh	x30, 0(x26)		x30 = 28
 136	lw	x29, 19(x20)		x29 = -10
-140	xorid	x11, x10		x11 = 8040
+140	xorid	x11, x10		x11 = 127080
 
 

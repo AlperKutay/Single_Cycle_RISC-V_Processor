@@ -14,7 +14,7 @@ module Datapath
 	input [4:0] Debug_Source_select,
 	output [31:0] Debug_out,
 	output [31:0] PC,Instr,
-	output [31:0] Zero
+	output [1:0]Zero
 	);
 	
 //WIRES ON DATAPATH

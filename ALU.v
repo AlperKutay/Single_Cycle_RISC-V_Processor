@@ -5,7 +5,7 @@ module ALU #(parameter WIDTH=8)
 	  input [WIDTH-1:0] DATA_A,
 	  input [WIDTH-1:0] DATA_B,
      output reg [WIDTH-1:0] OUT,
-	  output [WIDTH-1:0] Zero
+	  output [1:0] Zero
     );
 localparam	ADD = 4'b0000,
 				SUB = 4'b0001,
@@ -19,7 +19,7 @@ localparam	ADD = 4'b0000,
 				SRA = 4'b1001,
 				ADDU= 4'b1010,
 				SUBU= 4'b1011;
-assign Zero = OUT;				
+assign Zero = OUT[WIDTH-1] ? 2'b11: ((OUT == {WIDTH{1'b0}})? 2'b00 : 2'b01);				
 				
 always@(*) begin
 	case(control)
